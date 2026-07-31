@@ -44,6 +44,6 @@ MARKER_POLL_INTERVAL = 30
 SETUP_OK_PARAM = "/openzi/setup/ok"
 SETUP_FAILED_PARAM = "/openzi/setup/failed"
 
-# --- proof ---
-PROOF_FILE = "proof.json"
-PREDICATE_TYPE = "https://openzi.dev/account-verification/v1"
+# --- statement (the attestation signed over it is the proof) ---
+STATEMENT_FILE = "statement.json"
+PREDICATE_TYPE = "https://openzi.dev/verifiable-deployment/v1"

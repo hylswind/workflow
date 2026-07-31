@@ -1,10 +1,10 @@
 name: openzi-stub
 # e2e-only: identical to the production workflow (same step code, same inputs) EXCEPT
-# the launched instance runs a wait+marker stub instead of itworker, and the proof is
-# forced is_test=true. Its attestation is signed as coming from THIS workflow file, so
-# `gh attestation verify --predicate-type ... ` for the production workflow will never
-# accept a stub-produced proof. Use it to exercise the workflow's own logic without a
-# real platform bring-up.
+# the launched instance runs a wait+marker stub instead of itworker, and the statement
+# is forced isTest=true. Its attestation is signed as coming from THIS workflow file,
+# so `gh attestation verify --predicate-type ... ` for the production workflow will
+# never accept a stub-produced statement. Use it to exercise the workflow's own logic
+# without a real platform bring-up.
 on:
   workflow_dispatch:
     inputs:
@@ -15,7 +15,7 @@ on:
         description: "audit window end (Unix timestamp, seconds)"
         required: true
       domain:
-        description: "domain (recorded in the proof; not registered by the stub)"
+        description: "domain (recorded in the statement; not registered by the stub)"
         required: true
 
 permissions:
@@ -43,13 +43,13 @@ jobs:
           OPENZI_END: ${{ inputs.end }}
           OPENZI_DOMAIN: ${{ inputs.domain }}
         run: python -m openzi_workflow
-      - name: sign proof
+      - name: sign statement
         uses: actions/attest@v1
         with:
-          subject-path: proof.json
-          predicate-type: https://openzi.dev/account-verification/v1
-          predicate-path: proof.json
+          subject-path: statement.json
+          predicate-type: https://openzi.dev/verifiable-deployment/v1
+          predicate-path: statement.json
       - uses: actions/upload-artifact@v4
         with:
-          name: openzi-proof-stub
-          path: proof.json
+          name: openzi-statement-stub
+          path: statement.json

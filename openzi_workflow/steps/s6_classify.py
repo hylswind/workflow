@@ -3,7 +3,7 @@
 Prod = a CreateAccount event is present in-window (the account was created inside
 the audited window, so the whole history was observed). Test = none. The test/stub
 paths force is_test=true regardless: a run that skipped the domain purchase, or the
-stub workflow, can never produce a prod-grade proof. Extension point: prod will also
+stub workflow, can never produce a prod-grade statement. Extension point: prod will also
 run a rule-based check over the window's events (deferred).
 
 NOTE (account-type assumption): the CreateAccount discriminator assumes a standalone

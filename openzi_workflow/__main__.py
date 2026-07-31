@@ -1,10 +1,10 @@
 """Sequence the eight steps. Reads config from the environment (workflow inputs +
 secrets), runs steps 1-4 on the account's root key, waits, then runs steps 6-8 on the minted
-event-reader key. Writes proof.json; the workflow YAML signs and uploads it.
+event-reader key. Writes statement.json; the workflow YAML signs and uploads it.
 
 The stub workflow sets OPENZI_STUB=1: the launched instance runs the wait+marker
-stub instead of itworker, and the verdict is forced is_test=true. The skip-domain
-input likewise forces is_test=true (and tells itworker to reuse an owned domain)."""
+stub instead of itworker, and the verdict is forced isTest=true. The skip-domain
+input likewise forces isTest=true (and tells itworker to reuse an owned domain)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 from . import clients, config, userdata
 from .steps import (s1_iam, s2_launch, s3_lock_signin, s4_delete_root, s5_wait,
-                    s6_classify, s7_await_marker, s8_proof)
+                    s6_classify, s7_await_marker, s8_statement)
 
 
 @dataclass
@@ -104,16 +104,16 @@ def run(cfg: RunConfig, log=print) -> dict:
     log("step 6: classify test vs prod")
     is_test = s6_classify.classify(ct, _dt(cfg.start), _dt(cfg.end),
                                    forced_test=cfg.stub or cfg.skip_domain)
-    log(f"  is_test={is_test}")
+    log(f"  isTest={is_test}")
 
     log("step 7: await itworker setup marker")
     s7_await_marker.await_marker(ct)
 
-    log("step 8: write proof")
-    proof = s8_proof.build_proof(cfg.start, cfg.end, cfg.domain, is_test)
-    s8_proof.write_proof(config.PROOF_FILE, proof)
-    log(f"  wrote {config.PROOF_FILE}: {proof}")
-    return proof
+    log("step 8: write statement")
+    statement = s8_statement.build_statement(cfg.start, cfg.end, cfg.domain, is_test)
+    s8_statement.write_statement(config.STATEMENT_FILE, statement)
+    log(f"  wrote {config.STATEMENT_FILE}: {statement}")
+    return statement
 
 
 def main(argv: list[str] | None = None) -> int:

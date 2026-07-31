@@ -1,7 +1,7 @@
 """Step 7 — wait for itworker's setup result. itworker always writes a marker (a
 distinct parameter NAME for success vs failure), so the workflow learns the outcome
 instead of blocking until its job times out. A failure marker fails the run — no
-proof is signed."""
+statement is signed."""
 
 from __future__ import annotations
 

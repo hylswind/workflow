@@ -1,4 +1,4 @@
-"""End-to-end: trigger the REAL workflow and verify the signed proof + platform.
+"""End-to-end: trigger the REAL workflow and verify the attested statement + platform.
 
 Opt-in and destructive (it locks the account's console). Skipped unless OPENZI_E2E=1.
 Requires the `gh` CLI authenticated for the repo, and a management-account credential
@@ -35,7 +35,7 @@ def _gh(*args, **kw):
     return subprocess.run(["gh", *args], check=True, capture_output=True, text=True, **kw).stdout
 
 
-def test_workflow_produces_verifiable_test_proof():
+def test_workflow_produces_verifiable_test_statement():
     now = int(datetime.now(timezone.utc).timestamp())
     fields = {"start": str(now - 60),
               "end": str(now + 600),
@@ -52,16 +52,14 @@ def test_workflow_produces_verifiable_test_proof():
     conclusion = _run_field(run_id, "conclusion")
     assert conclusion == "success", f"run {run_id} concluded {conclusion}"
 
-    # download + verify the signed proof
+    # download + verify the attested statement
     workdir = f"/tmp/openzi-e2e-{run_id}"
     _gh("run", "download", str(run_id), "-R", REPO, "-D", workdir)
-    proof = json.loads(open(f"{workdir}/openzi-proof/proof.json").read()
-                       if os.path.exists(f"{workdir}/openzi-proof/proof.json")
-                       else open(_find(workdir, "proof.json")).read())
-    assert proof["domain"] == DOMAIN
-    assert proof["is_test"] is True   # test window / stub / skip path
-    _gh("attestation", "verify", _find(workdir, "proof.json"), "-R", REPO,
-        "--predicate-type", "https://openzi.dev/account-verification/v1")
+    statement = json.loads(open(_find(workdir, "statement.json")).read())
+    assert statement["domain"] == DOMAIN
+    assert statement["isTest"] is True   # test window / stub / skip path
+    _gh("attestation", "verify", _find(workdir, "statement.json"), "-R", REPO,
+        "--predicate-type", "https://openzi.dev/verifiable-deployment/v1")
 
 
 def _wait_for_run(timeout):

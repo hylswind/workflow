@@ -1,6 +1,7 @@
 name: openzi
 # The production workflow: drive the target account into an operator-inaccessible state and
-# emit a Sigstore-signed proof. Pinned by this commit; run publicly.
+# emit a verdict statement; the Sigstore attestation signed over it is the proof.
+# Pinned by this commit; run publicly.
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +18,7 @@ on:
         description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","State","CountryCode","ZipCode","PhoneNumber","Email"}'
         required: true
       skip_domain:
-        description: "reuse an already-owned domain instead of buying (forces is_test=true)"
+        description: "reuse an already-owned domain instead of buying (forces isTest=true)"
         type: boolean
         default: false
 
@@ -48,13 +49,13 @@ jobs:
           OPENZI_CONTACT: ${{ inputs.contact }}
           OPENZI_SKIP_DOMAIN: ${{ inputs.skip_domain }}
         run: python -m openzi_workflow
-      - name: sign proof
+      - name: sign statement
         uses: actions/attest@v1
         with:
-          subject-path: proof.json
-          predicate-type: https://openzi.dev/account-verification/v1
-          predicate-path: proof.json
+          subject-path: statement.json
+          predicate-type: https://openzi.dev/verifiable-deployment/v1
+          predicate-path: statement.json
       - uses: actions/upload-artifact@v4
         with:
-          name: openzi-proof
-          path: proof.json
+          name: openzi-statement
+          path: statement.json

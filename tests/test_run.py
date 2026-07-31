@@ -83,30 +83,30 @@ def _patch(monkeypatch):
                         lambda ct, s, e, forced_test: bool(forced_test))
     monkeypatch.setattr(m.s7_await_marker, "await_marker",
                         lambda ct: captured.__setitem__("awaited", True))
-    monkeypatch.setattr(m.s8_proof, "write_proof",
-                        lambda path, proof: captured.__setitem__("written", proof))
+    monkeypatch.setattr(m.s8_statement, "write_statement",
+                        lambda path, statement: captured.__setitem__("written", statement))
     return captured
 
 
 def test_run_production_path(monkeypatch):
     captured = _patch(monkeypatch)
-    proof = m.run(_cfg(), log=lambda *_: None)
+    statement = m.run(_cfg(), log=lambda *_: None)
     assert captured["ud"] == "SETUP_UD"
     assert captured["root_deleted"] == "AKIA"
     assert captured["awaited"] is True
-    assert proof["is_test"] is False and proof["domain"] == "example.com"
-    assert (proof["start"], proof["end"]) == (1700000000, 1700003600)  # unix seconds
-    assert captured["written"] == proof
+    assert statement["isTest"] is False and statement["domain"] == "example.com"
+    assert (statement["start"], statement["end"]) == (1700000000, 1700003600)  # unix seconds
+    assert captured["written"] == statement
 
 
 def test_run_stub_forces_test_and_stub_userdata(monkeypatch):
     captured = _patch(monkeypatch)
-    proof = m.run(_cfg(stub=True), log=lambda *_: None)
+    statement = m.run(_cfg(stub=True), log=lambda *_: None)
     assert captured["ud"] == "STUB_UD"
-    assert proof["is_test"] is True
+    assert statement["isTest"] is True
 
 
 def test_run_skip_domain_forces_test(monkeypatch):
     _patch(monkeypatch)
-    proof = m.run(_cfg(skip=True), log=lambda *_: None)
-    assert proof["is_test"] is True
+    statement = m.run(_cfg(skip=True), log=lambda *_: None)
+    assert statement["isTest"] is True
