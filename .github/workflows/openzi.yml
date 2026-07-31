@@ -5,10 +5,10 @@ on:
   workflow_dispatch:
     inputs:
       start:
-        description: "audit window start (ISO-8601 UTC, e.g. 2026-07-30T10:00:00Z)"
+        description: "audit window start (Unix timestamp, seconds since epoch)"
         required: true
       end:
-        description: "audit window end (ISO-8601 UTC). Must be within ~4h of trigger (6h job cap)."
+        description: "audit window end (Unix timestamp, seconds). Must be within ~4h of trigger (6h job cap)."
         required: true
       domain:
         description: "domain to register + control (e.g. example.com)"

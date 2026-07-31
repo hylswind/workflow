@@ -31,7 +31,7 @@ is no measured AMI or hardware attestation anymore.
 
 ## Inputs
 
-`start`, `end` (ISO-8601 UTC), `domain`, `contact` (registration contact JSON), and
+`start`, `end` (Unix timestamps, seconds), `domain`, `contact` (registration contact JSON), and
 `skip_domain` (reuse an owned domain, forces `is_test=true`) are `workflow_dispatch`
 inputs. `end` must be within ~4h of trigger (the itworker setup tail + the 6h job cap).
 

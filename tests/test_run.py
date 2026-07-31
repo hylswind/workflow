@@ -1,8 +1,6 @@
 """RunConfig parsing + the run() orchestration (steps stubbed): verdict propagation,
 stub vs real user-data selection, and root-key deletion."""
 
-from datetime import datetime, timezone
-
 import pytest
 
 from openzi_workflow import __main__ as m
@@ -12,22 +10,27 @@ from openzi_workflow import __main__ as m
 
 def _env(**over):
     base = {"OPENZI_ROOT_KEY": "AKIA", "OPENZI_ROOT_SECRET": "sec",
-            "OPENZI_API_KEY": "key", "OPENZI_START": "2026-07-30T00:00:00Z",
-            "OPENZI_END": "2026-07-30T01:00:00Z", "OPENZI_DOMAIN": "example.com",
+            "OPENZI_API_KEY": "key", "OPENZI_START": "1700000000",
+            "OPENZI_END": "1700003600", "OPENZI_DOMAIN": "example.com",
             "OPENZI_CONTACT": '{"Email":"a@b.c"}'}
     base.update(over)
     return base
 
 
-def test_from_env_parses():
+def test_from_env_parses_unix_seconds():
     cfg = m.RunConfig.from_env(_env(OPENZI_SKIP_DOMAIN="true"))
     assert cfg.domain == "example.com" and cfg.skip_domain is True and cfg.stub is False
-    assert cfg.start < cfg.end
+    assert (cfg.start, cfg.end) == (1700000000, 1700003600)
 
 
 def test_from_env_rejects_end_before_start():
     with pytest.raises(ValueError, match="end must be after start"):
-        m.RunConfig.from_env(_env(OPENZI_END="2026-07-29T00:00:00Z"))
+        m.RunConfig.from_env(_env(OPENZI_END="1699999999"))
+
+
+def test_from_env_rejects_non_numeric_timestamp():
+    with pytest.raises(ValueError, match="unix seconds"):
+        m.RunConfig.from_env(_env(OPENZI_START="2026-07-30T00:00:00Z"))
 
 
 def test_from_env_stub_does_not_require_api_key():
@@ -55,8 +58,7 @@ class FakeSession:
 def _cfg(stub=False, skip=False):
     return m.RunConfig(
         root_key="AKIA", root_secret="sec", api_key="key",
-        start=datetime(2026, 7, 30, tzinfo=timezone.utc),
-        end=datetime(2026, 7, 30, 1, tzinfo=timezone.utc),
+        start=1700000000, end=1700003600,
         domain="example.com", contact={}, skip_domain=skip, stub=stub, region="us-east-1")
 
 
@@ -93,6 +95,7 @@ def test_run_production_path(monkeypatch):
     assert captured["root_deleted"] == "AKIA"
     assert captured["awaited"] is True
     assert proof["is_test"] is False and proof["domain"] == "example.com"
+    assert (proof["start"], proof["end"]) == (1700000000, 1700003600)  # unix seconds
     assert captured["written"] == proof
 
 

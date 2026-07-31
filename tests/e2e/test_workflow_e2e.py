@@ -17,7 +17,7 @@ import json
 import os
 import subprocess
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
 
@@ -35,14 +35,10 @@ def _gh(*args, **kw):
     return subprocess.run(["gh", *args], check=True, capture_output=True, text=True, **kw).stdout
 
 
-def _iso(dt):
-    return dt.isoformat().replace("+00:00", "Z")
-
-
 def test_workflow_produces_verifiable_test_proof():
-    now = datetime.now(timezone.utc)
-    fields = {"start": _iso(now - timedelta(minutes=1)),
-              "end": _iso(now + timedelta(minutes=10)),
+    now = int(datetime.now(timezone.utc).timestamp())
+    fields = {"start": str(now - 60),
+              "end": str(now + 600),
               "domain": DOMAIN}
     if WORKFLOW == "openzi.yml":
         fields["contact"] = os.environ["OPENZI_CONTACT"]

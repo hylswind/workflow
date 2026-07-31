@@ -9,10 +9,10 @@ on:
   workflow_dispatch:
     inputs:
       start:
-        description: "audit window start (ISO-8601 UTC)"
+        description: "audit window start (Unix timestamp, seconds since epoch)"
         required: true
       end:
-        description: "audit window end (ISO-8601 UTC)"
+        description: "audit window end (Unix timestamp, seconds)"
         required: true
       domain:
         description: "domain (recorded in the proof; not registered by the stub)"

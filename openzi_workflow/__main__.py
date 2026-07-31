@@ -24,8 +24,8 @@ class RunConfig:
     root_key: str
     root_secret: str
     api_key: str
-    start: datetime
-    end: datetime
+    start: int          # unix timestamp, seconds
+    end: int            # unix timestamp, seconds
     domain: str
     contact: dict
     skip_domain: bool
@@ -42,7 +42,7 @@ class RunConfig:
         missing = [k for k in req if not e.get(k)]
         if missing:
             raise ValueError(f"workflow: missing env {missing}")
-        start, end = _parse_iso(e["OPENZI_START"]), _parse_iso(e["OPENZI_END"])
+        start, end = _parse_ts(e["OPENZI_START"]), _parse_ts(e["OPENZI_END"])
         if end <= start:
             raise ValueError("workflow: end must be after start")
         contact = json.loads(e.get("OPENZI_CONTACT") or "{}")
@@ -54,17 +54,20 @@ class RunConfig:
             stub=stub, region=e.get("OPENZI_REGION") or config.REGION)
 
 
-def _parse_iso(value: str) -> datetime:
-    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+def _parse_ts(value: str) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"workflow: timestamp must be unix seconds, got {value!r}") from None
 
 
-def _iso(dt: datetime) -> str:
-    return dt.isoformat().replace("+00:00", "Z")
+def _dt(ts: int) -> datetime:
+    """Epoch seconds -> aware UTC datetime, for the CloudTrail LookupEvents window."""
+    return datetime.fromtimestamp(ts, tz=timezone.utc)
 
 
 def run(cfg: RunConfig, log=print) -> dict:
-    end_epoch = int(cfg.end.timestamp())
+    end_epoch = cfg.end  # already unix seconds
     root = clients.root_session(cfg.root_key, cfg.root_secret)
     iam = root.client("iam")
     account_id = root.client("sts").get_caller_identity()["Account"]
@@ -99,7 +102,7 @@ def run(cfg: RunConfig, log=print) -> dict:
     ct = reader.client("cloudtrail")
 
     log("step 6: classify test vs prod")
-    is_test = s6_classify.classify(ct, cfg.start, cfg.end,
+    is_test = s6_classify.classify(ct, _dt(cfg.start), _dt(cfg.end),
                                    forced_test=cfg.stub or cfg.skip_domain)
     log(f"  is_test={is_test}")
 
@@ -107,7 +110,7 @@ def run(cfg: RunConfig, log=print) -> dict:
     s7_await_marker.await_marker(ct)
 
     log("step 8: write proof")
-    proof = s8_proof.build_proof(_iso(cfg.start), _iso(cfg.end), cfg.domain, is_test)
+    proof = s8_proof.build_proof(cfg.start, cfg.end, cfg.domain, is_test)
     s8_proof.write_proof(config.PROOF_FILE, proof)
     log(f"  wrote {config.PROOF_FILE}: {proof}")
     return proof
