@@ -1,0 +1,60 @@
+name: openzi
+# The production workflow: drive account B into an operator-inaccessible state and
+# emit a Sigstore-signed proof. Pinned by this commit; run publicly.
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "audit window start (ISO-8601 UTC, e.g. 2026-07-30T10:00:00Z)"
+        required: true
+      end:
+        description: "audit window end (ISO-8601 UTC). Must be within ~4h of trigger (6h job cap)."
+        required: true
+      domain:
+        description: "domain to register + control (e.g. example.com)"
+        required: true
+      contact:
+        description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","State","CountryCode","ZipCode","PhoneNumber","Email"}'
+        required: true
+      skip_domain:
+        description: "reuse an already-owned domain instead of buying (forces is_test=true)"
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write          # OIDC token for Sigstore signing
+  attestations: write      # write the artifact attestation
+  contents: read
+
+jobs:
+  bootstrap-and-attest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # under the 6h/job hard cap, with margin
+    steps:
+      # TODO(repo-split): pin these actions to full commit SHAs.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install boto3
+      - name: run steps 1-8
+        env:
+          OPENZI_ROOT_KEY: ${{ secrets.B_ROOT_KEY_ID }}
+          OPENZI_ROOT_SECRET: ${{ secrets.B_ROOT_SECRET }}
+          OPENZI_API_KEY: ${{ secrets.CONTROL_API_KEY }}
+          OPENZI_START: ${{ inputs.start }}
+          OPENZI_END: ${{ inputs.end }}
+          OPENZI_DOMAIN: ${{ inputs.domain }}
+          OPENZI_CONTACT: ${{ inputs.contact }}
+          OPENZI_SKIP_DOMAIN: ${{ inputs.skip_domain }}
+        run: python -m openzi_workflow
+      - name: sign proof
+        uses: actions/attest@v1
+        with:
+          subject-path: proof.json
+          predicate-type: https://openzi.dev/account-verification/v1
+          predicate-path: proof.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openzi-proof
+          path: proof.json

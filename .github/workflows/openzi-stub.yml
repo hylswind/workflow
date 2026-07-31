@@ -1,0 +1,55 @@
+name: openzi-stub
+# e2e-only: identical to the production workflow (same step code, same inputs) EXCEPT
+# the launched instance runs a wait+marker stub instead of itworker, and the proof is
+# forced is_test=true. Its attestation is signed as coming from THIS workflow file, so
+# `gh attestation verify --predicate-type ... ` for the production workflow will never
+# accept a stub-produced proof. Use it to exercise the workflow's own logic without a
+# real platform bring-up.
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "audit window start (ISO-8601 UTC)"
+        required: true
+      end:
+        description: "audit window end (ISO-8601 UTC)"
+        required: true
+      domain:
+        description: "domain (recorded in the proof; not registered by the stub)"
+        required: true
+
+permissions:
+  id-token: write
+  attestations: write
+  contents: read
+
+jobs:
+  bootstrap-and-attest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      # TODO(repo-split): pin these actions to full commit SHAs.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install boto3
+      - name: run steps 1-8 (stub itworker)
+        env:
+          OPENZI_STUB: "1"
+          OPENZI_ROOT_KEY: ${{ secrets.B_ROOT_KEY_ID }}
+          OPENZI_ROOT_SECRET: ${{ secrets.B_ROOT_SECRET }}
+          OPENZI_START: ${{ inputs.start }}
+          OPENZI_END: ${{ inputs.end }}
+          OPENZI_DOMAIN: ${{ inputs.domain }}
+        run: python -m openzi_workflow
+      - name: sign proof
+        uses: actions/attest@v1
+        with:
+          subject-path: proof.json
+          predicate-type: https://openzi.dev/account-verification/v1
+          predicate-path: proof.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openzi-proof-stub
+          path: proof.json
