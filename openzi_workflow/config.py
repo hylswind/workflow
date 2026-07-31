@@ -8,9 +8,9 @@ REGION = "us-east-1"
 
 # --- the itworker code this workflow launches (the cross-repo pin). The launched
 # instance clones exactly this; the workflow's own signed commit therefore also
-# pins itworker. FILL THESE IN at repo split (owner/name + an exact 40-char sha). ---
-ITWORKER_REPO = "hylswind/openzi-itworker"
-ITWORKER_COMMIT = "main"  # TODO(repo-split): pin to an exact commit sha
+# pins itworker. ---
+ITWORKER_REPO = "hylswind/itworker"
+ITWORKER_COMMIT = "main"  # TODO: pin to an exact commit sha for a production run
 
 # --- identities the workflow creates in the account ---
 # Must match openzi_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).

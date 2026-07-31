@@ -41,9 +41,10 @@ Secrets: `ROOT_KEY_ID`, `ROOT_SECRET`, `CONTROL_API_KEY`.
 ## The pin
 
 `config.ITWORKER_REPO` / `config.ITWORKER_COMMIT` pin the itworker code the launched
-instance clones. **Set these to the itworker repo + an exact commit sha** (they're
-placeholders until repo split). Because the workflow's own signed commit contains
-this pin, itworker is transitively pinned too.
+instance clones — currently `hylswind/itworker` at `main`. **For a production run,
+pin `ITWORKER_COMMIT` to an exact commit sha**: `main` is a moving target, so what
+runs would not be fixed by this workflow's signed commit. Because the workflow's own
+signed commit contains this pin, itworker is transitively pinned too.
 
 ## Testing
 
