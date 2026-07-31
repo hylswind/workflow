@@ -1,4 +1,4 @@
-"""Step 1 — create the two identities, using B's root credentials:
+"""Step 1 — create the two identities, using the account's root credentials:
 
 - an admin ROLE + instance profile (EC2 trust, AdministratorAccess) that the
   launched instance (and its ASG replacements) run under;

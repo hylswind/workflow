@@ -1,6 +1,6 @@
 """End-to-end: trigger the REAL workflow and verify the signed proof + platform.
 
-Opt-in and destructive (it locks account B's console). Skipped unless OPENZI_E2E=1.
+Opt-in and destructive (it locks the account's console). Skipped unless OPENZI_E2E=1.
 Requires the `gh` CLI authenticated for the repo, and a management-account credential
 (OPENZI_MGMT_PROFILE) able to assume into the test account for verification/cleanup.
 

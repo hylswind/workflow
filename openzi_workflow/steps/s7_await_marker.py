@@ -21,4 +21,4 @@ def await_marker(ct, *, sleep=None, now=None) -> None:
         kwargs["now"] = now
     result = events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM, **kwargs)
     if result != "ok":
-        raise SetupFailed("itworker setup reported failure (see /openzi/setup/failed in account B)")
+        raise SetupFailed("itworker setup reported failure (see /openzi/setup/failed in the target account)")

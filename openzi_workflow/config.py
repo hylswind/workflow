@@ -12,7 +12,7 @@ REGION = "us-east-1"
 ITWORKER_REPO = "hylswind/openzi-itworker"
 ITWORKER_COMMIT = "main"  # TODO(repo-split): pin to an exact commit sha
 
-# --- identities the workflow creates in B ---
+# --- identities the workflow creates in the account ---
 # Must match openzi_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
 ADMIN_ROLE = "openzi-admin"
 EVENT_READER_USER = "openzi-event-reader"

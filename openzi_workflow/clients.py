@@ -1,6 +1,6 @@
 """boto3 sessions for the workflow's two credential identities:
 
-- root: B's root access key (from repo secrets). Used for steps 1-4 (create the
+- root: the account's root access key (from repo secrets). Used for steps 1-4 (create the
   admin role + event-reader user, launch the instance, lock console sign-in, then
   delete its own key as its last act).
 - event_reader: the minted user's key (cloudtrail:LookupEvents only). Used for

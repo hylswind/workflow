@@ -1,6 +1,6 @@
 # openzi-workflow
 
-The GitHub Actions side of openzi. It drives a target AWS account ("B") into a
+The GitHub Actions side of openzi. It drives the target AWS account into a
 state no human can control, then — being pinned by its own commit and run in public
 — acts as the trusted verifier and emits a **Sigstore-signed proof** of what it saw.
 
@@ -15,13 +15,13 @@ is no measured AMI or hardware attestation anymore.
 
 ## What the run does (single job, in order)
 
-1. With B's root key: create an **admin role** (EC2 trust, AdministratorAccess) and
+1. With the account's root key: create an **admin role** (EC2 trust, AdministratorAccess) and
    an **event-reader user** (`cloudtrail:LookupEvents` only).
 2. Launch one EC2 (AL2023, admin instance profile, default VPC, public IP) whose
    user-data clones the **pinned itworker** commit and runs its setup.
 3. Enable the AWS Sign-In lockout (deny console sign-in unless from an empty anchor
    VPC; billing user exempt).
-4. Delete B's root access key — root's last act.
+4. Delete the account's root access key — root's last act.
 5. Wait until `end + t` (`t` = `config.T_SLACK_SECONDS`, absorbs event-history lag).
 6. Classify over `[start, end]`: a `CreateAccount` event in-window ⇒ prod
    (`is_test=false`), none ⇒ test. Polls to beat delivery latency.
@@ -35,7 +35,7 @@ is no measured AMI or hardware attestation anymore.
 `skip_domain` (reuse an owned domain, forces `is_test=true`) are `workflow_dispatch`
 inputs. `end` must be within ~4h of trigger (the itworker setup tail + the 6h job cap).
 
-Secrets: `B_ROOT_KEY_ID`, `B_ROOT_SECRET`, `CONTROL_API_KEY`.
+Secrets: `ROOT_KEY_ID`, `ROOT_SECRET`, `CONTROL_API_KEY`.
 
 ## The pin
 

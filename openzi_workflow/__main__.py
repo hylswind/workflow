@@ -1,5 +1,5 @@
 """Sequence the eight steps. Reads config from the environment (workflow inputs +
-secrets), runs steps 1-4 on B's root key, waits, then runs steps 6-8 on the minted
+secrets), runs steps 1-4 on the account's root key, waits, then runs steps 6-8 on the minted
 event-reader key. Writes proof.json; the workflow YAML signs and uploads it.
 
 The stub workflow sets OPENZI_STUB=1: the launched instance runs the wait+marker

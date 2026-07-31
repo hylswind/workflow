@@ -1,5 +1,5 @@
 name: openzi
-# The production workflow: drive account B into an operator-inaccessible state and
+# The production workflow: drive the target account into an operator-inaccessible state and
 # emit a Sigstore-signed proof. Pinned by this commit; run publicly.
 on:
   workflow_dispatch:
@@ -39,8 +39,8 @@ jobs:
       - run: pip install boto3
       - name: run steps 1-8
         env:
-          OPENZI_ROOT_KEY: ${{ secrets.B_ROOT_KEY_ID }}
-          OPENZI_ROOT_SECRET: ${{ secrets.B_ROOT_SECRET }}
+          OPENZI_ROOT_KEY: ${{ secrets.ROOT_KEY_ID }}
+          OPENZI_ROOT_SECRET: ${{ secrets.ROOT_SECRET }}
           OPENZI_API_KEY: ${{ secrets.CONTROL_API_KEY }}
           OPENZI_START: ${{ inputs.start }}
           OPENZI_END: ${{ inputs.end }}

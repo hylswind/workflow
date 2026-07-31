@@ -37,8 +37,8 @@ jobs:
       - name: run steps 1-8 (stub itworker)
         env:
           OPENZI_STUB: "1"
-          OPENZI_ROOT_KEY: ${{ secrets.B_ROOT_KEY_ID }}
-          OPENZI_ROOT_SECRET: ${{ secrets.B_ROOT_SECRET }}
+          OPENZI_ROOT_KEY: ${{ secrets.ROOT_KEY_ID }}
+          OPENZI_ROOT_SECRET: ${{ secrets.ROOT_SECRET }}
           OPENZI_START: ${{ inputs.start }}
           OPENZI_END: ${{ inputs.end }}
           OPENZI_DOMAIN: ${{ inputs.domain }}
