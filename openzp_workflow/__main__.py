@@ -4,10 +4,7 @@ event-reader key. Writes statement.json; the workflow YAML signs and uploads it.
 
 The stub workflow sets OPENZP_STUB=1: the launched instance runs the wait+marker
 stub instead of itworker, and the verdict is forced isTest=true. The skip-domain
-input likewise forces isTest=true (and tells itworker to reuse an owned domain).
-
-OPENZP_STUB changes the payload and the verdict, never the config contract: a stub
-run validates exactly what a production run does, so it rehearses the real thing."""
+input likewise forces isTest=true (and tells itworker to reuse an owned domain)."""
 
 from __future__ import annotations
 
@@ -20,12 +17,6 @@ from datetime import datetime, timezone
 from . import clients, config, userdata
 from .steps import (s1_iam, s2_launch, s3_lock_signin, s4_delete_root, s5_wait,
                     s6_classify, s7_await_marker, s8_statement)
-
-
-# Route53Domains ContactDetail fields itworker needs to register a domain. Checked
-# here, before the run seals the account, rather than on the instance hours later.
-_CONTACT_FIELDS = ("FirstName", "LastName", "AddressLine1", "City", "State",
-                   "CountryCode", "ZipCode", "PhoneNumber", "Email")
 
 
 @dataclass
@@ -52,19 +43,13 @@ class RunConfig:
         start, end = _parse_ts(e["OPENZP_START"]), _parse_ts(e["OPENZP_END"])
         if end <= start:
             raise ValueError("workflow: end must be after start")
-        contact = json.loads(e.get("OPENZP_CONTACT") or "{}")
-        if not isinstance(contact, dict):
-            raise ValueError("workflow: contact must be a JSON object")
-        skip_domain = e.get("OPENZP_SKIP_DOMAIN", "0") in ("1", "true", "True")
-        if not skip_domain:
-            absent = [f for f in _CONTACT_FIELDS if not contact.get(f)]
-            if absent:
-                raise ValueError(f"workflow: contact missing {absent}")
+        skip_domain = _flag(e, "OPENZP_SKIP_DOMAIN")
         return cls(
             root_key=e["OPENZP_ROOT_KEY"], root_secret=e["OPENZP_ROOT_SECRET"],
             api_key=e["OPENZP_API_KEY"], start=start, end=end,
-            domain=e["OPENZP_DOMAIN"], contact=contact, skip_domain=skip_domain,
-            stub=e.get("OPENZP_STUB", "0") in ("1", "true", "True"),
+            domain=e["OPENZP_DOMAIN"],
+            contact=_parse_contact(e.get("OPENZP_CONTACT"), registering=not skip_domain),
+            skip_domain=skip_domain, stub=_flag(e, "OPENZP_STUB"),
             region=e.get("OPENZP_REGION") or config.REGION)
 
 
@@ -73,6 +58,23 @@ def _parse_ts(value: str) -> int:
         return int(value)
     except (TypeError, ValueError):
         raise ValueError(f"workflow: timestamp must be unix seconds, got {value!r}") from None
+
+
+def _flag(env: dict, key: str) -> bool:
+    return env.get(key, "0") in ("1", "true", "True")
+
+
+def _parse_contact(raw: str | None, *, registering: bool) -> dict:
+    """A registration needs every Route53Domains ContactDetail field itworker passes
+    on. Checked here, before the run seals the account, not on the instance hours
+    later. Reusing an owned domain registers nothing, so the contact goes unused."""
+    contact = json.loads(raw or "{}")
+    if not isinstance(contact, dict):
+        raise ValueError("workflow: contact must be a JSON object")
+    absent = [f for f in config.CONTACT_FIELDS if not contact.get(f)] if registering else []
+    if absent:
+        raise ValueError(f"workflow: contact missing {absent}")
+    return contact
 
 
 def _dt(ts: int) -> datetime:
@@ -84,6 +86,7 @@ def run(cfg: RunConfig, log=print) -> dict:
     end_epoch = cfg.end  # already unix seconds
     root = clients.root_session(cfg.root_key, cfg.root_secret)
     iam = root.client("iam")
+    ec2 = root.client("ec2")
     account_id = root.client("sts").get_caller_identity()["Account"]
 
     log("step 1: create admin role + event-reader user")
@@ -99,12 +102,13 @@ def run(cfg: RunConfig, log=print) -> dict:
             repo=config.ITWORKER_REPO, commit=config.ITWORKER_COMMIT, region=cfg.region,
             domain=cfg.domain, end_epoch=end_epoch, api_key=cfg.api_key,
             skip_domain=cfg.skip_domain, contact=cfg.contact)
-    instance_id = s2_launch.launch(root.client("ec2"), root.client("ssm"),
-                                   user_data, ids["profile_name"])
+    # Taken before the launch so it is a true lower bound on any marker step 7 accepts.
+    launched_at = datetime.now(timezone.utc)
+    instance_id = s2_launch.launch(ec2, root.client("ssm"), user_data, ids["profile_name"])
     log(f"  instance {instance_id}")
 
     log("step 3: lock console sign-in")
-    s3_lock_signin.lock(root.client("ec2"), root.client("signin"), account_id)
+    s3_lock_signin.lock(ec2, root.client("signin"), account_id)
 
     log("step 4: delete root access key")
     s4_delete_root.delete_root_key(iam, cfg.root_key)
@@ -121,7 +125,7 @@ def run(cfg: RunConfig, log=print) -> dict:
     log(f"  isTest={is_test}")
 
     log("step 7: await itworker setup marker")
-    s7_await_marker.await_marker(ct)
+    s7_await_marker.await_marker(ct, launched_at)
 
     log("step 8: write statement")
     statement = s8_statement.build_statement(cfg.start, cfg.end, cfg.domain, is_test)

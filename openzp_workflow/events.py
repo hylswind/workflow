@@ -65,22 +65,28 @@ def classify_is_test(ct, start: datetime, end: datetime, *,
         sleep(interval)
 
 
-def await_setup_marker(ct, ok_name: str, failed_name: str, *,
+def await_setup_marker(ct, ok_name: str, failed_name: str, *, since: datetime,
                        timeout: float = 7200, interval: float = 30,
                        sleep=time.sleep, now=time.monotonic) -> str:
     """Poll PutParameter events until the setup success or failure marker appears.
     Returns 'ok' or 'failed'. Raises TimeoutError if neither shows up in time (the
-    itworker instance died before it could write even a failure marker)."""
+    itworker instance died before it could write even a failure marker).
+
+    `since` bounds the lookup at the instance launch, and is required: event history
+    retains 90 days and cannot be pruned, so unbounded this would accept a marker from
+    an earlier run in a reused account — and rescan that history on every poll."""
     wanted = {ok_name: "ok", failed_name: "failed"}
     deadline = now() + timeout
     attrs = [{"AttributeKey": "EventName", "AttributeValue": "PutParameter"}]
     while True:
         found: set[str] = set()
-        for e in _iter_events(ct, attributes=attrs):
+        for e in _iter_events(ct, start=since, attributes=attrs):
             rec = _parse(e)
             name = (rec.get("requestParameters") or {}).get("name")
             if name in wanted:
                 found.add(name)
+                if name == ok_name:
+                    break         # ok wins, so no later page can change the answer
         if ok_name in found:      # success is terminal-good; it wins if both seen
             return "ok"
         if failed_name in found:

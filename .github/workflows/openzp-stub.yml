@@ -3,7 +3,11 @@ name: openzp-stub
 # secrets, same validation) EXCEPT the launched instance runs a wait+marker stub
 # instead of itworker, and the statement is forced isTest=true. Keeping the inputs and
 # secrets in lockstep is the point: a green stub run proves the production run's
-# config would pass too. Its attestation is signed as coming from THIS workflow file,
+# config would pass too, and tests/test_workflows.py fails if the two files drift. The
+# lone deliberate divergence is skip_domain's default (the stub buys nothing, so
+# reusing a domain is the sane default). Its attestation is signed as coming from THIS
+# workflow file — which is also why the two files are not merged into one reusable
+# workflow: that would sign stub and production under the same identity, and
 # so `gh attestation verify --predicate-type ... ` for the production workflow will
 # never accept a stub-produced statement. Use it to exercise the workflow's own logic
 # without a real platform bring-up.
@@ -14,16 +18,16 @@ on:
         description: "audit window start (Unix timestamp, seconds since epoch)"
         required: true
       end:
-        description: "audit window end (Unix timestamp, seconds)"
+        description: "audit window end (Unix timestamp, seconds). Must be within ~4h of trigger (6h job cap)."
         required: true
       domain:
         description: "domain (recorded in the statement; not registered by the stub)"
         required: true
       contact:
-        description: 'domain registration contact, JSON (validated as production does; unused by the stub)'
+        description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","State","CountryCode","ZipCode","PhoneNumber","Email"}'
         required: true
       skip_domain:
-        description: "reuse an already-owned domain instead of buying (the stub buys nothing either way)"
+        description: "reuse an already-owned domain instead of buying (forces isTest=true)"
         type: boolean
         default: true
 

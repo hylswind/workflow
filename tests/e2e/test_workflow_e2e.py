@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 
 import pytest
 
+from openzp_workflow import config
+
 pytestmark = pytest.mark.e2e
 
 if os.environ.get("OPENZP_E2E") != "1":
@@ -58,7 +60,7 @@ def test_workflow_produces_verifiable_test_statement():
     assert statement["domain"] == DOMAIN
     assert statement["isTest"] is True   # test window / stub / skip path
     _gh("attestation", "verify", _find(workdir, "statement.json"), "-R", REPO,
-        "--predicate-type", "https://openzp.dev/verifiable-deployment/v1")
+        "--predicate-type", config.PREDICATE_TYPE)
 
 
 def _wait_for_run(timeout):

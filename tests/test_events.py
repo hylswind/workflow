@@ -10,11 +10,14 @@ from openzp_workflow import config, events
 from openzp_workflow.steps import s6_classify, s7_await_marker
 
 
-def _ev(name, param_name=None):
+def _ev(name, param_name=None, when=None):
     rec = {"eventName": name}
     if param_name is not None:
         rec["requestParameters"] = {"name": param_name}
-    return {"EventName": name, "CloudTrailEvent": json.dumps(rec)}
+    ev = {"EventName": name, "CloudTrailEvent": json.dumps(rec)}
+    if when is not None:
+        ev["EventTime"] = when
+    return ev
 
 
 class FakeCT:
@@ -31,6 +34,9 @@ class FakeCT:
                 if attrs:
                     want = attrs[0]["AttributeValue"]
                     sel = [e for e in evs if e["EventName"] == want]
+                start = kw.get("StartTime")
+                if start is not None:  # undated events are treated as in-range
+                    sel = [e for e in sel if e.get("EventTime", start) >= start]
                 return [{"Events": sel}]
 
         return _P()
@@ -70,25 +76,35 @@ def test_s6_forced_test_short_circuits():
 def test_await_marker_returns_ok():
     ct = FakeCT([_ev("PutParameter", config.SETUP_OK_PARAM)])
     assert events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM,
-                                     now=_clock([0, 0])) == "ok"
+                                     since=_START, now=_clock([0, 0])) == "ok"
 
 
 def test_await_marker_ok_wins_over_failed():
     ct = FakeCT([_ev("PutParameter", config.SETUP_FAILED_PARAM),
                  _ev("PutParameter", config.SETUP_OK_PARAM)])
     assert events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM,
-                                     now=_clock([0, 0])) == "ok"
+                                     since=_START, now=_clock([0, 0])) == "ok"
+
+
+def test_await_marker_ignores_a_marker_from_an_earlier_run():
+    # Event history keeps 90 days and cannot be pruned, so a reused account still
+    # carries the previous run's marker. Only the launch bound rules it out.
+    ct = FakeCT([_ev("PutParameter", config.SETUP_OK_PARAM, when=_START)])
+    with pytest.raises(TimeoutError):
+        events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM,
+                                  since=_END, timeout=5, interval=1,
+                                  sleep=lambda *_: None, now=_clock([0, 100]))
 
 
 def test_s7_raises_on_failure_marker():
     ct = FakeCT([_ev("PutParameter", config.SETUP_FAILED_PARAM)])
     with pytest.raises(s7_await_marker.SetupFailed):
-        s7_await_marker.await_marker(ct, now=_clock([0, 0]))
+        s7_await_marker.await_marker(ct, _START, now=_clock([0, 0]))
 
 
 def test_await_marker_times_out_when_silent():
     ct = FakeCT([_ev("PutParameter", "/openzp/unrelated")])
     with pytest.raises(TimeoutError):
         events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM,
-                                  timeout=5, interval=1, sleep=lambda *_: None,
-                                  now=_clock([0, 100]))
+                                  since=_START, timeout=5, interval=1,
+                                  sleep=lambda *_: None, now=_clock([0, 100]))

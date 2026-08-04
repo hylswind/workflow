@@ -54,7 +54,8 @@ pin, itworker is transitively pinned too.
   variants — the full `openzp.yml` (pinned itworker) and `openzp-stub.yml` (the
   wait+marker stub, to test the workflow's own logic without a platform bring-up).
   The stub takes the same inputs and secrets and runs the same validation, so a
-  green stub run also proves a production run's config would be accepted.
+  green stub run also proves a production run's config would be accepted;
+  `tests/test_workflows.py` fails if the two workflow files drift apart.
 
 ## Verifying a statement
 

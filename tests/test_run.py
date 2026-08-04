@@ -41,9 +41,21 @@ def test_from_env_rejects_non_numeric_timestamp():
         m.RunConfig.from_env(_env(OPENZP_START="2026-07-30T00:00:00Z"))
 
 
-def test_from_env_registering_requires_a_full_contact():
+# The stub changes the payload and the verdict, never the config contract, so every
+# demand below is parametrized over both runs: a green stub rehearses the real one.
+
+@pytest.mark.parametrize("extra", [{}, {"OPENZP_STUB": "1"}], ids=["production", "stub"])
+def test_from_env_registering_requires_a_full_contact(extra):
     with pytest.raises(ValueError, match="contact missing"):
-        m.RunConfig.from_env(_env(OPENZP_CONTACT='{"Email":"a@b.c"}'))
+        m.RunConfig.from_env(_env(OPENZP_CONTACT='{"Email":"a@b.c"}', **extra))
+
+
+@pytest.mark.parametrize("extra", [{}, {"OPENZP_STUB": "1"}], ids=["production", "stub"])
+def test_from_env_requires_api_key(extra):
+    env = _env(OPENZP_SKIP_DOMAIN="true", **extra)
+    del env["OPENZP_API_KEY"]
+    with pytest.raises(ValueError, match="OPENZP_API_KEY"):
+        m.RunConfig.from_env(env)
 
 
 def test_from_env_skip_domain_needs_no_contact():
@@ -54,21 +66,6 @@ def test_from_env_skip_domain_needs_no_contact():
 def test_from_env_rejects_non_object_contact():
     with pytest.raises(ValueError, match="contact must be a JSON object"):
         m.RunConfig.from_env(_env(OPENZP_CONTACT="[]"))
-
-
-# The stub changes the payload and the verdict, never the config contract: whatever a
-# production run demands, a stub run demands too, so a green stub rehearses the real one.
-
-def test_from_env_stub_still_requires_api_key():
-    env = _env(OPENZP_STUB="1", OPENZP_SKIP_DOMAIN="true")
-    del env["OPENZP_API_KEY"]
-    with pytest.raises(ValueError, match="OPENZP_API_KEY"):
-        m.RunConfig.from_env(env)
-
-
-def test_from_env_stub_still_requires_a_full_contact():
-    with pytest.raises(ValueError, match="contact missing"):
-        m.RunConfig.from_env(_env(OPENZP_STUB="1", OPENZP_CONTACT="{}"))
 
 
 # ---------- run() orchestration ----------
@@ -113,7 +110,7 @@ def _patch(monkeypatch):
     monkeypatch.setattr(m.s6_classify, "classify",
                         lambda ct, s, e, forced_test: bool(forced_test))
     monkeypatch.setattr(m.s7_await_marker, "await_marker",
-                        lambda ct: captured.__setitem__("awaited", True))
+                        lambda ct, since: captured.__setitem__("awaited", since))
     monkeypatch.setattr(m.s8_statement, "write_statement",
                         lambda path, statement: captured.__setitem__("written", statement))
     return captured
@@ -124,7 +121,7 @@ def test_run_production_path(monkeypatch):
     statement = m.run(_cfg(), log=lambda *_: None)
     assert captured["ud"] == "SETUP_UD"
     assert captured["root_deleted"] == "AKIA"
-    assert captured["awaited"] is True
+    assert captured["awaited"] is not None   # step 7 is bounded at the launch
     assert statement["isTest"] is False and statement["domain"] == "example.com"
     assert (statement["start"], statement["end"]) == (1700000000, 1700003600)  # unix seconds
     assert captured["written"] == statement
