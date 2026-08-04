@@ -10,7 +10,7 @@ REGION = "us-east-1"
 # instance clones exactly this; the workflow's own signed commit therefore also
 # pins itworker. ---
 ITWORKER_REPO = "hylswind/itworker"
-ITWORKER_COMMIT = "main"  # TODO: pin to an exact commit sha for a production run
+ITWORKER_COMMIT = "f781c1bd6b6d7d3aa770f89281ffc79395ed56b2"
 
 # --- identities the workflow creates in the account ---
 # Must match openzi_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
