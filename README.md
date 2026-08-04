@@ -1,6 +1,6 @@
-# openzi-workflow
+# openzp-workflow
 
-The GitHub Actions side of openzi. It drives the target AWS account into a
+The GitHub Actions side of openzp. It drives the target AWS account into a
 state no human can control, then — being pinned by its own commit and run in public
 — acts as the trusted verifier and emits a signed **statement** of what it saw.
 
@@ -51,7 +51,7 @@ pin, itworker is transitively pinned too.
 - `pip install -r requirements-dev.txt && pytest` — offline unit tests (moto +
   fakes), no AWS account.
 - e2e (`tests/e2e/`, opt-in via env, destructive): triggers the real workflow. Two
-  variants — the full `openzi.yml` (pinned itworker) and `openzi-stub.yml` (the
+  variants — the full `openzp.yml` (pinned itworker) and `openzp-stub.yml` (the
   wait+marker stub, to test the workflow's own logic without a platform bring-up).
   The stub takes the same inputs and secrets and runs the same validation, so a
   green stub run also proves a production run's config would be accepted.
@@ -59,14 +59,14 @@ pin, itworker is transitively pinned too.
 ## Verifying a statement
 
 ```
-gh run download <run-id> -n openzi-statement
+gh run download <run-id> -n openzp-statement
 gh attestation verify statement.json \
    --repo <owner>/<repo> \
-   --predicate-type https://openzi.dev/verifiable-deployment/v1
+   --predicate-type https://openzp.dev/verifiable-deployment/v1
 cat statement.json
 ```
 
 `gh attestation verify` must report a Sigstore/Rekor attestation naming this repo,
-the pinned commit, and the **production** `openzi.yml` workflow. A statement from
+the pinned commit, and the **production** `openzp.yml` workflow. A statement from
 the stub workflow is attested under a different workflow identity and is
 `isTest=true`, so it can never pass as production.

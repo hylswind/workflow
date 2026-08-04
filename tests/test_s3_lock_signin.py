@@ -5,8 +5,8 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from openzi_workflow import config
-from openzi_workflow.steps import s3_lock_signin
+from openzp_workflow import config
+from openzp_workflow.steps import s3_lock_signin
 
 
 class FakeSignin:

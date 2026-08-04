@@ -32,7 +32,7 @@ def launch(ec2, ssm, user_data: str, profile_name: str,
                                     "DeleteOnTermination": True}],
                 UserData=user_data,
                 TagSpecifications=[{"ResourceType": "instance",
-                                    "Tags": [{"Key": "Name", "Value": "openzi-itworker"}]}])
+                                    "Tags": [{"Key": "Name", "Value": "openzp-itworker"}]}])
             return resp["Instances"][0]["InstanceId"]
         except ClientError as exc:
             code = exc.response.get("Error", {}).get("Code", "")

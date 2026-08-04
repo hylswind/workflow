@@ -13,17 +13,17 @@ ITWORKER_REPO = "hylswind/itworker"
 ITWORKER_COMMIT = "f781c1bd6b6d7d3aa770f89281ffc79395ed56b2"
 
 # --- identities the workflow creates in the account ---
-# Must match openzi_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
-ADMIN_ROLE = "openzi-admin"
-EVENT_READER_USER = "openzi-event-reader"
+# Must match openzp_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
+ADMIN_ROLE = "openzp-admin"
+EVENT_READER_USER = "openzp-event-reader"
 
 BASE_AMI_PARAM = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 
 # --- sign-in lockout (same mechanism as the old bootstrap p3) ---
-SIGNIN_LOCK_VPC_TAG = "openzi-signin-lock-vpc"
+SIGNIN_LOCK_VPC_TAG = "openzp-signin-lock-vpc"
 SIGNIN_LOCK_VPC_CIDR = "10.255.0.0/28"
 # The billing user the platform stack creates, exempted from the lockout. MUST match
-# ConsoleUser.UserName in openzi-itworker's platform_stack.yaml.
+# ConsoleUser.UserName in openzp-itworker's platform_stack.yaml.
 BILLING_CONSOLE_USER = "console"
 
 # --- timing ---
@@ -40,10 +40,10 @@ MARKER_POLL_TIMEOUT_SECONDS = 7200
 MARKER_POLL_INTERVAL = 30
 
 # --- setup result markers itworker writes (the NAME encodes the outcome). MUST
-# match openzi_itworker.config.SETUP_OK_PARAM / SETUP_FAILED_PARAM. ---
-SETUP_OK_PARAM = "/openzi/setup/ok"
-SETUP_FAILED_PARAM = "/openzi/setup/failed"
+# match openzp_itworker.config.SETUP_OK_PARAM / SETUP_FAILED_PARAM. ---
+SETUP_OK_PARAM = "/openzp/setup/ok"
+SETUP_FAILED_PARAM = "/openzp/setup/failed"
 
 # --- statement (the attestation signed over it is the proof) ---
 STATEMENT_FILE = "statement.json"
-PREDICATE_TYPE = "https://openzi.dev/verifiable-deployment/v1"
+PREDICATE_TYPE = "https://openzp.dev/verifiable-deployment/v1"

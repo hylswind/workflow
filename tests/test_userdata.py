@@ -3,20 +3,20 @@ with the passed config) and the e2e stub (wait then write the success marker).""
 
 import json
 
-from openzi_workflow import config, userdata
+from openzp_workflow import config, userdata
 
 
 def test_setup_userdata_clones_pin_and_passes_config():
     ud = userdata.build_setup_userdata(
-        repo="owner/openzi-itworker", commit="abcdef1", region="us-east-1",
+        repo="owner/openzp-itworker", commit="abcdef1", region="us-east-1",
         domain="example.com", end_epoch=1700000000, api_key="s3cr3t",
         skip_domain=True, contact={"Email": "a@b.c"})
     assert "git checkout abcdef1" in ud
-    assert "github.com/owner/openzi-itworker" in ud
-    assert "python3.11 -m openzi_itworker setup" in ud
-    assert "OPENZI_DOMAIN=example.com" in ud
-    assert "OPENZI_END=1700000000" in ud
-    assert "OPENZI_SKIP_DOMAIN=1" in ud
+    assert "github.com/owner/openzp-itworker" in ud
+    assert "python3.11 -m openzp_itworker setup" in ud
+    assert "OPENZP_DOMAIN=example.com" in ud
+    assert "OPENZP_END=1700000000" in ud
+    assert "OPENZP_SKIP_DOMAIN=1" in ud
     assert "s3cr3t" in ud
     # contact JSON survives shell-quoting
     assert json.dumps({"Email": "a@b.c"}) in ud

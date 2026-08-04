@@ -1,4 +1,4 @@
-name: openzi
+name: openzp
 # The production workflow: drive the target account into an operator-inaccessible state and
 # emit a verdict statement; the Sigstore attestation signed over it is the proof.
 # Pinned by this commit; run publicly.
@@ -40,22 +40,22 @@ jobs:
       - run: pip install boto3
       - name: run steps 1-8
         env:
-          OPENZI_ROOT_KEY: ${{ secrets.ROOT_KEY_ID }}
-          OPENZI_ROOT_SECRET: ${{ secrets.ROOT_SECRET }}
-          OPENZI_API_KEY: ${{ secrets.CONTROL_API_KEY }}
-          OPENZI_START: ${{ inputs.start }}
-          OPENZI_END: ${{ inputs.end }}
-          OPENZI_DOMAIN: ${{ inputs.domain }}
-          OPENZI_CONTACT: ${{ inputs.contact }}
-          OPENZI_SKIP_DOMAIN: ${{ inputs.skip_domain }}
-        run: python -m openzi_workflow
+          OPENZP_ROOT_KEY: ${{ secrets.ROOT_KEY_ID }}
+          OPENZP_ROOT_SECRET: ${{ secrets.ROOT_SECRET }}
+          OPENZP_API_KEY: ${{ secrets.CONTROL_API_KEY }}
+          OPENZP_START: ${{ inputs.start }}
+          OPENZP_END: ${{ inputs.end }}
+          OPENZP_DOMAIN: ${{ inputs.domain }}
+          OPENZP_CONTACT: ${{ inputs.contact }}
+          OPENZP_SKIP_DOMAIN: ${{ inputs.skip_domain }}
+        run: python -m openzp_workflow
       - name: sign statement
         uses: actions/attest@v1
         with:
           subject-path: statement.json
-          predicate-type: https://openzi.dev/verifiable-deployment/v1
+          predicate-type: https://openzp.dev/verifiable-deployment/v1
           predicate-path: statement.json
       - uses: actions/upload-artifact@v4
         with:
-          name: openzi-statement
+          name: openzp-statement
           path: statement.json

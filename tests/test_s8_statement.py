@@ -1,6 +1,6 @@
 import json
 
-from openzi_workflow.steps import s8_statement
+from openzp_workflow.steps import s8_statement
 
 
 def test_build_statement_shape():

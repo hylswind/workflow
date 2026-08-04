@@ -16,20 +16,20 @@ _SETUP_TEMPLATE = r"""#!/bin/bash
 set -euxo pipefail
 dnf install -y git python3.11 python3.11-pip
 python3.11 -m pip install boto3
-rm -rf /opt/openzi-itworker
-git clone https://github.com/{repo}.git /opt/openzi-itworker
-cd /opt/openzi-itworker
+rm -rf /opt/openzp-itworker
+git clone https://github.com/{repo}.git /opt/openzp-itworker
+cd /opt/openzp-itworker
 git checkout {commit}
 export AWS_DEFAULT_REGION={region}
-export OPENZI_DOMAIN={domain}
-export OPENZI_END={end_epoch}
-export OPENZI_API_KEY={api_key}
-export OPENZI_REPO={repo}
-export OPENZI_COMMIT={commit}
-export OPENZI_REGION={region}
-export OPENZI_SKIP_DOMAIN={skip_domain}
-export OPENZI_CONTACT={contact_shell}
-exec python3.11 -m openzi_itworker setup
+export OPENZP_DOMAIN={domain}
+export OPENZP_END={end_epoch}
+export OPENZP_API_KEY={api_key}
+export OPENZP_REPO={repo}
+export OPENZP_COMMIT={commit}
+export OPENZP_REGION={region}
+export OPENZP_SKIP_DOMAIN={skip_domain}
+export OPENZP_CONTACT={contact_shell}
+exec python3.11 -m openzp_itworker setup
 """
 
 # The stub writes the SAME success-marker parameter the real itworker would, so the

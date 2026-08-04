@@ -18,7 +18,7 @@ def lock(ec2, signin, account_id: str) -> str:
     stmt = signin.put_resource_permission_statement(
         sourceVpc=vpc_id, requestedRegion=config.REGION,
         excludedPrincipal=billing_arn,
-        clientToken=f"openzi-signin-lock-{account_id}")["statementId"]
+        clientToken=f"openzp-signin-lock-{account_id}")["statementId"]
     signin.put_console_authorization_configuration(targetId=account_id)
     return stmt
 

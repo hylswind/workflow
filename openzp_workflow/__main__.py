@@ -2,11 +2,11 @@
 secrets), runs steps 1-4 on the account's root key, waits, then runs steps 6-8 on the minted
 event-reader key. Writes statement.json; the workflow YAML signs and uploads it.
 
-The stub workflow sets OPENZI_STUB=1: the launched instance runs the wait+marker
+The stub workflow sets OPENZP_STUB=1: the launched instance runs the wait+marker
 stub instead of itworker, and the verdict is forced isTest=true. The skip-domain
 input likewise forces isTest=true (and tells itworker to reuse an owned domain).
 
-OPENZI_STUB changes the payload and the verdict, never the config contract: a stub
+OPENZP_STUB changes the payload and the verdict, never the config contract: a stub
 run validates exactly what a production run does, so it rehearses the real thing."""
 
 from __future__ import annotations
@@ -44,28 +44,28 @@ class RunConfig:
     @classmethod
     def from_env(cls, env: dict | None = None) -> "RunConfig":
         e = os.environ if env is None else env
-        req = ["OPENZI_ROOT_KEY", "OPENZI_ROOT_SECRET", "OPENZI_START", "OPENZI_END",
-               "OPENZI_DOMAIN", "OPENZI_API_KEY"]
+        req = ["OPENZP_ROOT_KEY", "OPENZP_ROOT_SECRET", "OPENZP_START", "OPENZP_END",
+               "OPENZP_DOMAIN", "OPENZP_API_KEY"]
         missing = [k for k in req if not e.get(k)]
         if missing:
             raise ValueError(f"workflow: missing env {missing}")
-        start, end = _parse_ts(e["OPENZI_START"]), _parse_ts(e["OPENZI_END"])
+        start, end = _parse_ts(e["OPENZP_START"]), _parse_ts(e["OPENZP_END"])
         if end <= start:
             raise ValueError("workflow: end must be after start")
-        contact = json.loads(e.get("OPENZI_CONTACT") or "{}")
+        contact = json.loads(e.get("OPENZP_CONTACT") or "{}")
         if not isinstance(contact, dict):
             raise ValueError("workflow: contact must be a JSON object")
-        skip_domain = e.get("OPENZI_SKIP_DOMAIN", "0") in ("1", "true", "True")
+        skip_domain = e.get("OPENZP_SKIP_DOMAIN", "0") in ("1", "true", "True")
         if not skip_domain:
             absent = [f for f in _CONTACT_FIELDS if not contact.get(f)]
             if absent:
                 raise ValueError(f"workflow: contact missing {absent}")
         return cls(
-            root_key=e["OPENZI_ROOT_KEY"], root_secret=e["OPENZI_ROOT_SECRET"],
-            api_key=e["OPENZI_API_KEY"], start=start, end=end,
-            domain=e["OPENZI_DOMAIN"], contact=contact, skip_domain=skip_domain,
-            stub=e.get("OPENZI_STUB", "0") in ("1", "true", "True"),
-            region=e.get("OPENZI_REGION") or config.REGION)
+            root_key=e["OPENZP_ROOT_KEY"], root_secret=e["OPENZP_ROOT_SECRET"],
+            api_key=e["OPENZP_API_KEY"], start=start, end=end,
+            domain=e["OPENZP_DOMAIN"], contact=contact, skip_domain=skip_domain,
+            stub=e.get("OPENZP_STUB", "0") in ("1", "true", "True"),
+            region=e.get("OPENZP_REGION") or config.REGION)
 
 
 def _parse_ts(value: str) -> int:

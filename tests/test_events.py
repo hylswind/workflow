@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from openzi_workflow import config, events
-from openzi_workflow.steps import s6_classify, s7_await_marker
+from openzp_workflow import config, events
+from openzp_workflow.steps import s6_classify, s7_await_marker
 
 
 def _ev(name, param_name=None):
@@ -87,7 +87,7 @@ def test_s7_raises_on_failure_marker():
 
 
 def test_await_marker_times_out_when_silent():
-    ct = FakeCT([_ev("PutParameter", "/openzi/unrelated")])
+    ct = FakeCT([_ev("PutParameter", "/openzp/unrelated")])
     with pytest.raises(TimeoutError):
         events.await_setup_marker(ct, config.SETUP_OK_PARAM, config.SETUP_FAILED_PARAM,
                                   timeout=5, interval=1, sleep=lambda *_: None,

@@ -7,8 +7,8 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from openzi_workflow import config
-from openzi_workflow.steps import s1_iam
+from openzp_workflow import config
+from openzp_workflow.steps import s1_iam
 
 
 @pytest.fixture

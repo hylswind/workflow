@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from openzi_workflow import __main__ as m
+from openzp_workflow import __main__ as m
 
 
 # ---------- RunConfig.from_env ----------
@@ -17,58 +17,58 @@ _CONTACT = json.dumps({"FirstName": "A", "LastName": "B", "AddressLine1": "1 Mai
 
 
 def _env(**over):
-    base = {"OPENZI_ROOT_KEY": "AKIA", "OPENZI_ROOT_SECRET": "sec",
-            "OPENZI_API_KEY": "key", "OPENZI_START": "1700000000",
-            "OPENZI_END": "1700003600", "OPENZI_DOMAIN": "example.com",
-            "OPENZI_CONTACT": _CONTACT}
+    base = {"OPENZP_ROOT_KEY": "AKIA", "OPENZP_ROOT_SECRET": "sec",
+            "OPENZP_API_KEY": "key", "OPENZP_START": "1700000000",
+            "OPENZP_END": "1700003600", "OPENZP_DOMAIN": "example.com",
+            "OPENZP_CONTACT": _CONTACT}
     base.update(over)
     return base
 
 
 def test_from_env_parses_unix_seconds():
-    cfg = m.RunConfig.from_env(_env(OPENZI_SKIP_DOMAIN="true"))
+    cfg = m.RunConfig.from_env(_env(OPENZP_SKIP_DOMAIN="true"))
     assert cfg.domain == "example.com" and cfg.skip_domain is True and cfg.stub is False
     assert (cfg.start, cfg.end) == (1700000000, 1700003600)
 
 
 def test_from_env_rejects_end_before_start():
     with pytest.raises(ValueError, match="end must be after start"):
-        m.RunConfig.from_env(_env(OPENZI_END="1699999999"))
+        m.RunConfig.from_env(_env(OPENZP_END="1699999999"))
 
 
 def test_from_env_rejects_non_numeric_timestamp():
     with pytest.raises(ValueError, match="unix seconds"):
-        m.RunConfig.from_env(_env(OPENZI_START="2026-07-30T00:00:00Z"))
+        m.RunConfig.from_env(_env(OPENZP_START="2026-07-30T00:00:00Z"))
 
 
 def test_from_env_registering_requires_a_full_contact():
     with pytest.raises(ValueError, match="contact missing"):
-        m.RunConfig.from_env(_env(OPENZI_CONTACT='{"Email":"a@b.c"}'))
+        m.RunConfig.from_env(_env(OPENZP_CONTACT='{"Email":"a@b.c"}'))
 
 
 def test_from_env_skip_domain_needs_no_contact():
-    cfg = m.RunConfig.from_env(_env(OPENZI_CONTACT="{}", OPENZI_SKIP_DOMAIN="true"))
+    cfg = m.RunConfig.from_env(_env(OPENZP_CONTACT="{}", OPENZP_SKIP_DOMAIN="true"))
     assert cfg.skip_domain is True and cfg.contact == {}
 
 
 def test_from_env_rejects_non_object_contact():
     with pytest.raises(ValueError, match="contact must be a JSON object"):
-        m.RunConfig.from_env(_env(OPENZI_CONTACT="[]"))
+        m.RunConfig.from_env(_env(OPENZP_CONTACT="[]"))
 
 
 # The stub changes the payload and the verdict, never the config contract: whatever a
 # production run demands, a stub run demands too, so a green stub rehearses the real one.
 
 def test_from_env_stub_still_requires_api_key():
-    env = _env(OPENZI_STUB="1", OPENZI_SKIP_DOMAIN="true")
-    del env["OPENZI_API_KEY"]
-    with pytest.raises(ValueError, match="OPENZI_API_KEY"):
+    env = _env(OPENZP_STUB="1", OPENZP_SKIP_DOMAIN="true")
+    del env["OPENZP_API_KEY"]
+    with pytest.raises(ValueError, match="OPENZP_API_KEY"):
         m.RunConfig.from_env(env)
 
 
 def test_from_env_stub_still_requires_a_full_contact():
     with pytest.raises(ValueError, match="contact missing"):
-        m.RunConfig.from_env(_env(OPENZI_STUB="1", OPENZI_CONTACT="{}"))
+        m.RunConfig.from_env(_env(OPENZP_STUB="1", OPENZP_CONTACT="{}"))
 
 
 # ---------- run() orchestration ----------
@@ -101,7 +101,7 @@ def _patch(monkeypatch):
     monkeypatch.setattr(m.clients, "reader_session",
                         lambda *a: FakeSession({"cloudtrail": object()}))
     monkeypatch.setattr(m.s1_iam, "create_identities",
-                        lambda iam: {"profile_name": "openzi-admin", "reader_key": "rk", "reader_secret": "rs"})
+                        lambda iam: {"profile_name": "openzp-admin", "reader_key": "rk", "reader_secret": "rs"})
     monkeypatch.setattr(m.userdata, "build_setup_userdata", lambda **kw: "SETUP_UD")
     monkeypatch.setattr(m.userdata, "build_stub_userdata", lambda **kw: "STUB_UD")
     monkeypatch.setattr(m.s2_launch, "launch",
