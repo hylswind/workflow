@@ -15,7 +15,7 @@ on:
         description: "domain to register + control (e.g. example.com)"
         required: true
       contact:
-        description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","State","CountryCode","ZipCode","PhoneNumber","Email"}'
+        description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","CountryCode","ZipCode","PhoneNumber","Email"}. PhoneNumber as +886.212345678. State/AddressLine2/OrganizationName optional.'
         required: true
       skip_domain:
         description: "reuse an already-owned domain instead of buying (forces isTest=true)"

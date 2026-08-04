@@ -10,16 +10,17 @@ REGION = "us-east-1"
 # instance clones exactly this; the workflow's own signed commit therefore also
 # pins itworker. ---
 ITWORKER_REPO = "hylswind/itworker"
-ITWORKER_COMMIT = "f781c1bd6b6d7d3aa770f89281ffc79395ed56b2"
+ITWORKER_COMMIT = "0387740976269abb8b67ef5ea101800af1d9ab5f"
 
 # --- identities the workflow creates in the account ---
 # Must match openzp_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
 ADMIN_ROLE = "openzp-admin"
 EVENT_READER_USER = "openzp-event-reader"
 
-# Route53Domains ContactDetail fields itworker passes on when it registers a domain.
-# MUST match what openzp_itworker's registration call requires.
-CONTACT_FIELDS = ("FirstName", "LastName", "AddressLine1", "City", "State",
+# Route53Domains rejects a RegisterDomain whose contacts miss any of these. MUST match
+# openzp_itworker.setup.contacts.REQUIRED — demanding a field it passes through as
+# optional (State, OrganizationName, ...) would refuse a registration that would work.
+CONTACT_FIELDS = ("FirstName", "LastName", "AddressLine1", "City",
                   "CountryCode", "ZipCode", "PhoneNumber", "Email")
 
 BASE_AMI_PARAM = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
