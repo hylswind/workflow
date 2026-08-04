@@ -1,7 +1,9 @@
 name: openzi-stub
-# e2e-only: identical to the production workflow (same step code, same inputs) EXCEPT
-# the launched instance runs a wait+marker stub instead of itworker, and the statement
-# is forced isTest=true. Its attestation is signed as coming from THIS workflow file,
+# e2e-only: identical to the production workflow (same step code, same inputs, same
+# secrets, same validation) EXCEPT the launched instance runs a wait+marker stub
+# instead of itworker, and the statement is forced isTest=true. Keeping the inputs and
+# secrets in lockstep is the point: a green stub run proves the production run's
+# config would pass too. Its attestation is signed as coming from THIS workflow file,
 # so `gh attestation verify --predicate-type ... ` for the production workflow will
 # never accept a stub-produced statement. Use it to exercise the workflow's own logic
 # without a real platform bring-up.
@@ -17,6 +19,13 @@ on:
       domain:
         description: "domain (recorded in the statement; not registered by the stub)"
         required: true
+      contact:
+        description: 'domain registration contact, JSON (validated as production does; unused by the stub)'
+        required: true
+      skip_domain:
+        description: "reuse an already-owned domain instead of buying (the stub buys nothing either way)"
+        type: boolean
+        default: true
 
 permissions:
   id-token: write
@@ -39,9 +48,12 @@ jobs:
           OPENZI_STUB: "1"
           OPENZI_ROOT_KEY: ${{ secrets.ROOT_KEY_ID }}
           OPENZI_ROOT_SECRET: ${{ secrets.ROOT_SECRET }}
+          OPENZI_API_KEY: ${{ secrets.CONTROL_API_KEY }}
           OPENZI_START: ${{ inputs.start }}
           OPENZI_END: ${{ inputs.end }}
           OPENZI_DOMAIN: ${{ inputs.domain }}
+          OPENZI_CONTACT: ${{ inputs.contact }}
+          OPENZI_SKIP_DOMAIN: ${{ inputs.skip_domain }}
         run: python -m openzi_workflow
       - name: sign statement
         uses: actions/attest@v1

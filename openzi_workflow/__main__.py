@@ -4,7 +4,10 @@ event-reader key. Writes statement.json; the workflow YAML signs and uploads it.
 
 The stub workflow sets OPENZI_STUB=1: the launched instance runs the wait+marker
 stub instead of itworker, and the verdict is forced isTest=true. The skip-domain
-input likewise forces isTest=true (and tells itworker to reuse an owned domain)."""
+input likewise forces isTest=true (and tells itworker to reuse an owned domain).
+
+OPENZI_STUB changes the payload and the verdict, never the config contract: a stub
+run validates exactly what a production run does, so it rehearses the real thing."""
 
 from __future__ import annotations
 
@@ -17,6 +20,12 @@ from datetime import datetime, timezone
 from . import clients, config, userdata
 from .steps import (s1_iam, s2_launch, s3_lock_signin, s4_delete_root, s5_wait,
                     s6_classify, s7_await_marker, s8_statement)
+
+
+# Route53Domains ContactDetail fields itworker needs to register a domain. Checked
+# here, before the run seals the account, rather than on the instance hours later.
+_CONTACT_FIELDS = ("FirstName", "LastName", "AddressLine1", "City", "State",
+                   "CountryCode", "ZipCode", "PhoneNumber", "Email")
 
 
 @dataclass
@@ -35,10 +44,8 @@ class RunConfig:
     @classmethod
     def from_env(cls, env: dict | None = None) -> "RunConfig":
         e = os.environ if env is None else env
-        req = ["OPENZI_ROOT_KEY", "OPENZI_ROOT_SECRET", "OPENZI_START", "OPENZI_END", "OPENZI_DOMAIN"]
-        stub = e.get("OPENZI_STUB", "0") in ("1", "true", "True")
-        if not stub:  # the stub run needs neither the API key nor contact details
-            req += ["OPENZI_API_KEY"]
+        req = ["OPENZI_ROOT_KEY", "OPENZI_ROOT_SECRET", "OPENZI_START", "OPENZI_END",
+               "OPENZI_DOMAIN", "OPENZI_API_KEY"]
         missing = [k for k in req if not e.get(k)]
         if missing:
             raise ValueError(f"workflow: missing env {missing}")
@@ -46,12 +53,19 @@ class RunConfig:
         if end <= start:
             raise ValueError("workflow: end must be after start")
         contact = json.loads(e.get("OPENZI_CONTACT") or "{}")
+        if not isinstance(contact, dict):
+            raise ValueError("workflow: contact must be a JSON object")
+        skip_domain = e.get("OPENZI_SKIP_DOMAIN", "0") in ("1", "true", "True")
+        if not skip_domain:
+            absent = [f for f in _CONTACT_FIELDS if not contact.get(f)]
+            if absent:
+                raise ValueError(f"workflow: contact missing {absent}")
         return cls(
             root_key=e["OPENZI_ROOT_KEY"], root_secret=e["OPENZI_ROOT_SECRET"],
-            api_key=e.get("OPENZI_API_KEY", ""), start=start, end=end,
-            domain=e["OPENZI_DOMAIN"], contact=contact,
-            skip_domain=e.get("OPENZI_SKIP_DOMAIN", "0") in ("1", "true", "True"),
-            stub=stub, region=e.get("OPENZI_REGION") or config.REGION)
+            api_key=e["OPENZI_API_KEY"], start=start, end=end,
+            domain=e["OPENZI_DOMAIN"], contact=contact, skip_domain=skip_domain,
+            stub=e.get("OPENZI_STUB", "0") in ("1", "true", "True"),
+            region=e.get("OPENZI_REGION") or config.REGION)
 
 
 def _parse_ts(value: str) -> int:

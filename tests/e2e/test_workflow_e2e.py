@@ -9,8 +9,8 @@ Env:
   OPENZI_GH_REPO=owner/name    the workflow repo (gh -R)
   OPENZI_WORKFLOW=openzi.yml   workflow file (or openzi-stub.yml)
   OPENZI_DOMAIN                domain input
-  OPENZI_CONTACT               contact JSON input (production workflow only)
-  OPENZI_SKIP_DOMAIN=true      reuse an owned domain (no purchase)
+  OPENZI_CONTACT               contact JSON input (needed only when not skipping)
+  OPENZI_SKIP_DOMAIN=true      reuse an owned domain (no purchase; default true)
 """
 
 import json
@@ -39,10 +39,9 @@ def test_workflow_produces_verifiable_test_statement():
     now = int(datetime.now(timezone.utc).timestamp())
     fields = {"start": str(now - 60),
               "end": str(now + 600),
-              "domain": DOMAIN}
-    if WORKFLOW == "openzi.yml":
-        fields["contact"] = os.environ["OPENZI_CONTACT"]
-        fields["skip_domain"] = os.environ.get("OPENZI_SKIP_DOMAIN", "true")
+              "domain": DOMAIN,
+              "contact": os.environ.get("OPENZI_CONTACT", "{}"),
+              "skip_domain": os.environ.get("OPENZI_SKIP_DOMAIN", "true")}
     args = ["workflow", "run", WORKFLOW, "-R", REPO]
     for k, v in fields.items():
         args += ["-f", f"{k}={v}"]

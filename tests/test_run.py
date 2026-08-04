@@ -1,6 +1,8 @@
 """RunConfig parsing + the run() orchestration (steps stubbed): verdict propagation,
 stub vs real user-data selection, and root-key deletion."""
 
+import json
+
 import pytest
 
 from openzi_workflow import __main__ as m
@@ -8,11 +10,17 @@ from openzi_workflow import __main__ as m
 
 # ---------- RunConfig.from_env ----------
 
+_CONTACT = json.dumps({"FirstName": "A", "LastName": "B", "AddressLine1": "1 Main St",
+                       "City": "Taipei", "State": "TPE", "CountryCode": "TW",
+                       "ZipCode": "100", "PhoneNumber": "+886.212345678",
+                       "Email": "a@b.c"})
+
+
 def _env(**over):
     base = {"OPENZI_ROOT_KEY": "AKIA", "OPENZI_ROOT_SECRET": "sec",
             "OPENZI_API_KEY": "key", "OPENZI_START": "1700000000",
             "OPENZI_END": "1700003600", "OPENZI_DOMAIN": "example.com",
-            "OPENZI_CONTACT": '{"Email":"a@b.c"}'}
+            "OPENZI_CONTACT": _CONTACT}
     base.update(over)
     return base
 
@@ -33,11 +41,34 @@ def test_from_env_rejects_non_numeric_timestamp():
         m.RunConfig.from_env(_env(OPENZI_START="2026-07-30T00:00:00Z"))
 
 
-def test_from_env_stub_does_not_require_api_key():
-    env = _env(OPENZI_STUB="1")
+def test_from_env_registering_requires_a_full_contact():
+    with pytest.raises(ValueError, match="contact missing"):
+        m.RunConfig.from_env(_env(OPENZI_CONTACT='{"Email":"a@b.c"}'))
+
+
+def test_from_env_skip_domain_needs_no_contact():
+    cfg = m.RunConfig.from_env(_env(OPENZI_CONTACT="{}", OPENZI_SKIP_DOMAIN="true"))
+    assert cfg.skip_domain is True and cfg.contact == {}
+
+
+def test_from_env_rejects_non_object_contact():
+    with pytest.raises(ValueError, match="contact must be a JSON object"):
+        m.RunConfig.from_env(_env(OPENZI_CONTACT="[]"))
+
+
+# The stub changes the payload and the verdict, never the config contract: whatever a
+# production run demands, a stub run demands too, so a green stub rehearses the real one.
+
+def test_from_env_stub_still_requires_api_key():
+    env = _env(OPENZI_STUB="1", OPENZI_SKIP_DOMAIN="true")
     del env["OPENZI_API_KEY"]
-    cfg = m.RunConfig.from_env(env)
-    assert cfg.stub is True
+    with pytest.raises(ValueError, match="OPENZI_API_KEY"):
+        m.RunConfig.from_env(env)
+
+
+def test_from_env_stub_still_requires_a_full_contact():
+    with pytest.raises(ValueError, match="contact missing"):
+        m.RunConfig.from_env(_env(OPENZI_STUB="1", OPENZI_CONTACT="{}"))
 
 
 # ---------- run() orchestration ----------

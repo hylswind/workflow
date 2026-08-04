@@ -53,6 +53,8 @@ pin, itworker is transitively pinned too.
 - e2e (`tests/e2e/`, opt-in via env, destructive): triggers the real workflow. Two
   variants — the full `openzi.yml` (pinned itworker) and `openzi-stub.yml` (the
   wait+marker stub, to test the workflow's own logic without a platform bring-up).
+  The stub takes the same inputs and secrets and runs the same validation, so a
+  green stub run also proves a production run's config would be accepted.
 
 ## Verifying a statement
 
