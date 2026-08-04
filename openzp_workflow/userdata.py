@@ -20,6 +20,7 @@ rm -rf /opt/openzp-itworker
 git clone https://github.com/{repo}.git /opt/openzp-itworker
 cd /opt/openzp-itworker
 git checkout {commit}
+set +x
 export AWS_DEFAULT_REGION={region}
 export OPENZP_DOMAIN={domain}
 export OPENZP_END={end_epoch}
