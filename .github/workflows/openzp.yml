@@ -14,9 +14,6 @@ on:
       domain:
         description: "domain to register + control (e.g. example.com)"
         required: true
-      contact:
-        description: 'domain registration contact, JSON: {"FirstName","LastName","AddressLine1","City","CountryCode","ZipCode","PhoneNumber","Email"}. PhoneNumber as +886.212345678. State/AddressLine2/OrganizationName optional.'
-        required: true
       skip_domain:
         description: "reuse an already-owned domain instead of buying (forces isTest=true)"
         type: boolean
@@ -46,9 +43,9 @@ jobs:
           OPENZP_START: ${{ inputs.start }}
           OPENZP_END: ${{ inputs.end }}
           OPENZP_DOMAIN: ${{ inputs.domain }}
-          OPENZP_CONTACT: ${{ inputs.contact }}
+          OPENZP_CONTACT: ${{ secrets.REGISTRATION_CONTACT }}
           OPENZP_SKIP_DOMAIN: ${{ inputs.skip_domain }}
-        run: python -m openzp_workflow
+        run: python -u -m openzp_workflow
       - name: sign statement
         uses: actions/attest@v1
         with:

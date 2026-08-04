@@ -9,8 +9,9 @@ Env:
   OPENZP_GH_REPO=owner/name    the workflow repo (gh -R)
   OPENZP_WORKFLOW=openzp.yml   workflow file (or openzp-stub.yml)
   OPENZP_DOMAIN                domain input
-  OPENZP_CONTACT               contact JSON input (needed only when not skipping)
   OPENZP_SKIP_DOMAIN=true      reuse an owned domain (no purchase; default true)
+
+The registration contact is the REGISTRATION_CONTACT repo secret, not an input.
 """
 
 import json
@@ -42,7 +43,6 @@ def test_workflow_produces_verifiable_test_statement():
     fields = {"start": str(now - 60),
               "end": str(now + 600),
               "domain": DOMAIN,
-              "contact": os.environ.get("OPENZP_CONTACT", "{}"),
               "skip_domain": os.environ.get("OPENZP_SKIP_DOMAIN", "true")}
     args = ["workflow", "run", WORKFLOW, "-R", REPO]
     for k, v in fields.items():

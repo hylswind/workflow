@@ -30,24 +30,40 @@ is no measured AMI or hardware attestation anymore.
    success vs failure — so a failure fails the run instead of hanging).
 8. Write `statement.json = {start, end, domain, isTest}`; the YAML signs + uploads it.
 
+## Secrets
+
+`ROOT_KEY_ID` and `ROOT_SECRET` are the target account's root access key. The run
+deletes it, so every run needs a freshly minted one.
+
+`CONTROL_API_KEY` is the bearer key the control plane will accept.
+
+`REGISTRATION_CONTACT` is the registrant Route 53 Domains is given:
+
+```
+{
+  "FirstName": "Ada",
+  "LastName": "Lovelace",
+  "AddressLine1": "1 Main St",
+  "City": "Taipei",
+  "CountryCode": "TW",
+  "ZipCode": "100",
+  "PhoneNumber": "+886.212345678",
+  "Email": "ada@example.com"
+}
+```
+
+`PhoneNumber` is already in the form Route 53 wants — nothing reformats it. `State`,
+`AddressLine2` and `OrganizationName` are passed through when present, and
+`ContactType` defaults to `PERSON`. Only a run that registers reads it, so it can be
+left unset while `skip_domain=true`.
+
 ## Inputs
 
-`start`, `end` (Unix timestamps, seconds), `domain`, `contact` (registration contact JSON), and
-`skip_domain` (reuse an owned domain, forces `isTest=true`) are `workflow_dispatch`
-inputs. The run only starts classifying once `end` has passed, and still has the
-itworker setup tail to wait out after that, so `end` has to leave both inside the
-job's timeout — a window far out enough to strand them gets the job killed with the
-account already sealed.
-
-`contact` is the registrant Route 53 Domains is given. It needs `FirstName`,
-`LastName`, `AddressLine1`, `City`, `CountryCode`, `ZipCode`, `PhoneNumber` (already
-in Route 53's `+886.212345678` form — nothing reformats it) and `Email`; `State`,
-`AddressLine2` and `OrganizationName` are passed through when present, and
-`ContactType` defaults to `PERSON`. Only a run that registers reads it, so
-`skip_domain=true` accepts `{}` — and when it is read, the fields are checked before
-the account is sealed rather than on the instance once it is too late.
-
-Secrets: `ROOT_KEY_ID`, `ROOT_SECRET`, `CONTROL_API_KEY`.
+`start`, `end` (Unix timestamps, seconds), `domain`, and `skip_domain` (reuse an owned
+domain, forces `isTest=true`) are `workflow_dispatch` inputs. The run only starts
+classifying once `end` has passed, and still has the itworker setup tail to wait out
+after that, so `end` has to leave both inside the job's timeout — a window far out
+enough to strand them gets the job killed with the account already sealed.
 
 ## Triggering a run
 
@@ -59,12 +75,11 @@ gh workflow run openzp.yml \
    -f start=$((NOW - 3600)) \
    -f end=$((NOW + 600)) \
    -f domain=example.com \
-   -f contact='{"FirstName":"Ada","LastName":"Lovelace","AddressLine1":"1 Main St","City":"Taipei","CountryCode":"TW","ZipCode":"100","PhoneNumber":"+886.212345678","Email":"ada@example.com"}' \
    -f skip_domain=false
 ```
 
 Reuse a domain the account already owns — registers nothing, forced `isTest=true`, so
-the contact goes unread and `{}` will do:
+the contact goes unread:
 
 ```
 NOW=$(date +%s)
@@ -72,7 +87,6 @@ gh workflow run openzp.yml \
    -f start=$((NOW - 3600)) \
    -f end=$((NOW + 600)) \
    -f domain=example.com \
-   -f contact='{}' \
    -f skip_domain=true
 ```
 
