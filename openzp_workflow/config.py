@@ -10,7 +10,7 @@ REGION = "us-east-1"
 # instance clones exactly this; the workflow's own signed commit therefore also
 # pins itworker. ---
 ITWORKER_REPO = "hylswind/itworker"
-ITWORKER_COMMIT = "857fd54a0df022937abf3dfcf21cf4b3a8d2f04f"
+ITWORKER_COMMIT = "e4eefff7bfcdc74b5bf35df7839e426bfc924ff0"
 
 # --- identities the workflow creates in the account ---
 # Must match openzp_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
@@ -26,6 +26,8 @@ CONTACT_FIELDS = ("FirstName", "LastName", "AddressLine1", "City",
 BASE_AMI_PARAM = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 
 # --- sign-in lockout (same mechanism as the old bootstrap p3) ---
+# itworker's recover deletes this VPC, so the tag MUST match
+# openzp_itworker.config.SIGNIN_LOCK_VPC_NAME.
 SIGNIN_LOCK_VPC_TAG = "openzp-signin-lock-vpc"
 SIGNIN_LOCK_VPC_CIDR = "10.255.0.0/28"
 # The billing user the platform stack creates, exempted from the lockout. MUST match
