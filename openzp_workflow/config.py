@@ -10,7 +10,7 @@ REGION = "us-east-1"
 # instance clones exactly this; the workflow's own signed commit therefore also
 # pins itworker. ---
 ITWORKER_REPO = "hylswind/itworker"
-ITWORKER_COMMIT = "0387740976269abb8b67ef5ea101800af1d9ab5f"
+ITWORKER_COMMIT = "857fd54a0df022937abf3dfcf21cf4b3a8d2f04f"
 
 # --- identities the workflow creates in the account ---
 # Must match openzp_itworker.config.ADMIN_PROFILE_NAME (the control LT runs under it).
